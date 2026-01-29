@@ -43,7 +43,14 @@ const ChatAssistant: React.FC = () => {
   useEffect(() => {
     const initChat = async () => {
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+        // process 객체가 존재하지 않을 경우를 대비한 안전한 참조
+        const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : undefined;
+        if (!apiKey) {
+          console.warn("API Key is missing. Chat might not work properly.");
+          return;
+        }
+
+        const ai = new GoogleGenAI({ apiKey: apiKey });
         const chat = ai.chats.create({
           model: 'gemini-3-flash-preview',
           config: {

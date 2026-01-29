@@ -19,6 +19,16 @@ const PortfolioModal: React.FC<{ project: Portfolio; onClose: () => void }> = ({
     return (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')) && !isInstagramURL(url);
   };
 
+  const formatVideoEmbedUrl = (url: string) => {
+    if (url.includes('youtube.com/watch?v=')) {
+      return url.replace('watch?v=', 'embed/');
+    }
+    if (url.includes('youtu.be/')) {
+      return url.replace('youtu.be/', 'youtube.com/embed/');
+    }
+    return url;
+  };
+
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8">
       <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={onClose}></div>
@@ -36,7 +46,7 @@ const PortfolioModal: React.FC<{ project: Portfolio; onClose: () => void }> = ({
             {project.videoUrl && (
               <div className="w-full rounded-3xl overflow-hidden bg-neutral-800">
                 {isInstagramURL(project.videoUrl) ? (
-                  /* 인스타그램 링크 대응 UI */
+                  /* 인스타그램 링크 대응 UI: iframe 차단을 피하기 위한 전용 카드 */
                   <div className="relative aspect-video flex flex-col items-center justify-center bg-neutral-900 group">
                     <img 
                       src={project.thumbnail} 
@@ -48,14 +58,14 @@ const PortfolioModal: React.FC<{ project: Portfolio; onClose: () => void }> = ({
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                       </div>
                       <h4 className="text-xl font-black mb-2">Instagram Video</h4>
-                      <p className="text-white/50 text-sm mb-8 font-light">인스타그램 보안 정책상 외부 앱에서 영상을 직접 재생할 수 없습니다.</p>
+                      <p className="text-white/50 text-sm mb-8 font-light max-w-sm mx-auto">인스타그램 보안 정책으로 인해 직접 재생할 수 없습니다. 공식 페이지에서 확인해주세요.</p>
                       <a 
                         href={project.videoUrl} 
                         target="_blank" 
                         rel="noreferrer"
                         className="inline-flex items-center gap-2 px-8 py-3 bg-white text-black font-black rounded-full hover:bg-yellow-400 transition-all text-sm uppercase tracking-widest"
                       >
-                        포스트 확인하기
+                        인스타그램에서 보기
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
                       </a>
                     </div>
@@ -65,7 +75,7 @@ const PortfolioModal: React.FC<{ project: Portfolio; onClose: () => void }> = ({
                   <div className="aspect-video">
                     <iframe 
                       className="w-full h-full"
-                      src={project.videoUrl.includes('youtube') ? project.videoUrl.replace('watch?v=', 'embed/') : project.videoUrl}
+                      src={formatVideoEmbedUrl(project.videoUrl)}
                       title={project.title}
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -73,12 +83,18 @@ const PortfolioModal: React.FC<{ project: Portfolio; onClose: () => void }> = ({
                     ></iframe>
                   </div>
                 ) : isImageURL(project.videoUrl) ? (
-                  /* 이미지 URL */
-                  <img 
-                    src={project.videoUrl} 
-                    alt={project.title} 
-                    className="w-full h-auto block"
-                  />
+                  /* Imgur 등의 이미지 URL은 iframe 대신 img 태그 사용 */
+                  <div className="bg-neutral-900 flex items-center justify-center min-h-[400px]">
+                    <img 
+                      src={project.videoUrl} 
+                      alt={project.title} 
+                      className="w-full h-auto block"
+                      onError={(e) => {
+                         // 이미지 로드 실패 시 썸네일로 대체
+                         (e.target as HTMLImageElement).src = project.thumbnail;
+                      }}
+                    />
+                  </div>
                 ) : (
                   /* 기타 URL (기본 iframe 시도) */
                   <div className="aspect-video">
@@ -96,7 +112,9 @@ const PortfolioModal: React.FC<{ project: Portfolio; onClose: () => void }> = ({
             
             {/* 추가 이미지 갤러리 */}
             {project.images.map((img, idx) => (
-              <img key={idx} src={img} alt={`${project.title} ${idx}`} className="w-full rounded-3xl" />
+              <div key={idx} className="bg-neutral-800 rounded-3xl overflow-hidden">
+                <img src={img} alt={`${project.title} ${idx}`} className="w-full h-auto" />
+              </div>
             ))}
           </div>
 
