@@ -28,6 +28,11 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #FFD700;
         }
+        /* 앱 로딩 전 까만 화면 방지 */
+        #root {
+            min-height: 100vh;
+            background-color: #000;
+        }
     </style>
 <script type="importmap">
 {
@@ -43,5 +48,7 @@
 </head>
 <body>
     <div id="root"></div>
+    <!-- 엔트리 포인트 스크립트 추가 -->
+    <script type="module" src="./index.tsx"></script>
 </body>
 </html>
